@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Shield, User, BookUser, Loader2, KeyRound } from "lucide-react";
+import { Loader2, KeyRound } from "lucide-react";
 import { useUser } from "@/contexts/user-context";
 import {
   Card,
@@ -33,40 +34,41 @@ export function LoginCard() {
     e.preventDefault();
     setIsLoading(true);
 
-    // This is a simplified, mock authentication for demonstration.
-    // In a real app, you would use Firebase Auth to sign in.
-    const mockUser = users.find(u => u.email === email);
-    
-    if (mockUser) {
-        try {
-            // In a real app, you wouldn't need the mock password check.
-            // Firebase handles the password verification.
-            // We use a mock password of 'password123' for all demo users.
-            if (password !== 'password123') {
-                 throw new Error("Invalid credentials.");
-            }
-            await signInWithEmailAndPassword(auth, email, password);
-            toast({
-                title: "Login Successful",
-                description: `Welcome back, ${mockUser.name}!`,
-            });
-            router.push("/dashboard");
-        } catch (error: any) {
-             toast({
-                variant: "destructive",
-                title: "Login Failed",
-                description: "Invalid email or password. Please try again. Use password 'password123' for any user.",
-            });
-        }
-    } else {
-       toast({
-            variant: "destructive",
-            title: "Login Failed",
-            description: "No user found with that email address.",
-        });
-    }
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      const mockUser = users.find(u => u.email === user.email);
 
-    setIsLoading(false);
+      toast({
+          title: "Login Successful",
+          description: `Welcome back, ${mockUser?.name || user.email}!`,
+      });
+      router.push("/dashboard");
+
+    } catch (error: any) {
+      console.error("Firebase Auth Error:", error);
+      let errorMessage = "An unknown error occurred. Please try again.";
+      if (error.code) {
+        switch (error.code) {
+          case 'auth/user-not-found':
+          case 'auth/wrong-password':
+          case 'auth/invalid-credential':
+            errorMessage = "Invalid email or password. Please try again. Use password 'password123' for any user.";
+            break;
+          default:
+            errorMessage = "Login failed. Please check your credentials and try again.";
+            break;
+        }
+      }
+       toast({
+          variant: "destructive",
+          title: "Login Failed",
+          description: errorMessage,
+      });
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   return (
