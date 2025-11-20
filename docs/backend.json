@@ -1,0 +1,685 @@
+{
+  "entities": {
+    "Course": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Course",
+      "type": "object",
+      "description": "Represents a course of study offered by the college (e.g., BCA, BBA, BCom, BA).",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Course entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the course (e.g., BCA, BBA)."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the course."
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "Batch": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Batch",
+      "type": "object",
+      "description": "Represents a batch or year within a course (e.g., 1st year, 2nd year).",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Batch entity."
+        },
+        "courseId": {
+          "type": "string",
+          "description": "Reference to Course. (Relationship: Course 1:N Batch)"
+        },
+        "year": {
+          "type": "number",
+          "description": "The year of the batch (e.g., 1, 2, 3)."
+        }
+      },
+      "required": [
+        "id",
+        "courseId",
+        "year"
+      ]
+    },
+    "Semester": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Semester",
+      "type": "object",
+      "description": "Represents a semester within a batch.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Semester entity."
+        },
+        "batchId": {
+          "type": "string",
+          "description": "Reference to Batch. (Relationship: Batch 1:N Semester)"
+        },
+        "semesterNumber": {
+          "type": "number",
+          "description": "The semester number (e.g., 1, 2, 3, 4, 5, 6)."
+        }
+      },
+      "required": [
+        "id",
+        "batchId",
+        "semesterNumber"
+      ]
+    },
+    "Section": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Section",
+      "type": "object",
+      "description": "Represents a section within a semester.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Section entity."
+        },
+        "semesterId": {
+          "type": "string",
+          "description": "Reference to Semester. (Relationship: Semester 1:N Section)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the section (e.g., A, B, C)."
+        }
+      },
+      "required": [
+        "id",
+        "semesterId",
+        "name"
+      ]
+    },
+    "Subject": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Subject",
+      "type": "object",
+      "description": "Represents a subject within a semester.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Subject entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the subject."
+        },
+        "code": {
+          "type": "string",
+          "description": "The code for the subject."
+        },
+        "semesterId": {
+          "type": "string",
+          "description": "Reference to Semester. (Relationship: Semester 1:N Subject)"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "code",
+        "semesterId"
+      ]
+    },
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the application (Admin, Teacher, or Student).",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "role": {
+          "type": "string",
+          "description": "The role of the user (e.g., ADMIN, TEACHER, STUDENT)."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the user.",
+          "format": "email"
+        }
+      },
+      "required": [
+        "id",
+        "role",
+        "email"
+      ]
+    },
+    "Admin": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Admin",
+      "type": "object",
+      "description": "Represents an admin user.",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:1 Admin)"
+        }
+      },
+      "required": [
+        "userId"
+      ]
+    },
+    "Teacher": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Teacher",
+      "type": "object",
+      "description": "Represents a teacher user.",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:1 Teacher)"
+        },
+        "departmentId": {
+          "type": "string",
+          "description": "The department ID of the teacher."
+        }
+      },
+      "required": [
+        "userId",
+        "departmentId"
+      ]
+    },
+    "Student": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Student",
+      "type": "object",
+      "description": "Represents a student user.",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:1 Student)"
+        },
+        "rollNumber": {
+          "type": "string",
+          "description": "The roll number of the student."
+        },
+        "courseId": {
+          "type": "string",
+          "description": "Reference to Course. (Relationship: Course 1:N Student)"
+        },
+        "batchId": {
+          "type": "string",
+          "description": "Reference to Batch. (Relationship: Batch 1:N Student)"
+        },
+        "semesterId": {
+          "type": "string",
+          "description": "Reference to Semester. (Relationship: Semester 1:N Student)"
+        },
+        "sectionId": {
+          "type": "string",
+          "description": "Reference to Section. (Relationship: Section 1:N Student)"
+        }
+      },
+      "required": [
+        "userId",
+        "rollNumber",
+        "courseId",
+        "batchId",
+        "semesterId",
+        "sectionId"
+      ]
+    },
+    "Attendance": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Attendance",
+      "type": "object",
+      "description": "Represents the attendance record of a student for a specific subject.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Attendance entity."
+        },
+        "studentId": {
+          "type": "string",
+          "description": "Reference to Student. (Relationship: Student 1:N Attendance)"
+        },
+        "subjectId": {
+          "type": "string",
+          "description": "Reference to Subject. (Relationship: Subject 1:N Attendance)"
+        },
+        "date": {
+          "type": "string",
+          "description": "The date of the attendance record.",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "description": "The attendance status (e.g., Present, Absent, Late)."
+        }
+      },
+      "required": [
+        "id",
+        "studentId",
+        "subjectId",
+        "date",
+        "status"
+      ]
+    },
+    "StudyMaterial": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "StudyMaterial",
+      "type": "object",
+      "description": "Represents study material uploaded for a subject.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the StudyMaterial entity."
+        },
+        "subjectId": {
+          "type": "string",
+          "description": "Reference to Subject. (Relationship: Subject 1:N StudyMaterial)"
+        },
+        "teacherId": {
+          "type": "string",
+          "description": "Reference to Teacher. (Relationship: Teacher 1:N StudyMaterial)"
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the study material."
+        },
+        "fileUrl": {
+          "type": "string",
+          "description": "The URL of the study material file.",
+          "format": "uri"
+        },
+        "uploadDate": {
+          "type": "string",
+          "description": "The date when the study material was uploaded.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "subjectId",
+        "teacherId",
+        "title",
+        "fileUrl",
+        "uploadDate"
+      ]
+    },
+    "QuestionPaper": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "QuestionPaper",
+      "type": "object",
+      "description": "Represents a previous year question paper.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the QuestionPaper entity."
+        },
+        "courseId": {
+          "type": "string",
+          "description": "Reference to Course. (Relationship: Course 1:N QuestionPaper)"
+        },
+        "semesterId": {
+          "type": "string",
+          "description": "Reference to Semester. (Relationship: Semester 1:N QuestionPaper)"
+        },
+        "subjectId": {
+          "type": "string",
+          "description": "Reference to Subject. (Relationship: Subject 1:N QuestionPaper)"
+        },
+        "examType": {
+          "type": "string",
+          "description": "The type of exam (e.g., Midterm, End Sem, Internal)."
+        },
+        "year": {
+          "type": "number",
+          "description": "The year of the question paper."
+        },
+        "fileUrl": {
+          "type": "string",
+          "description": "The URL of the question paper file.",
+          "format": "uri"
+        },
+        "uploaderId": {
+          "type": "string",
+          "description": "Reference to User who uploaded. (Relationship: User 1:N QuestionPaper)"
+        },
+        "uploadDate": {
+          "type": "string",
+          "description": "The date when the question paper was uploaded.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "courseId",
+        "semesterId",
+        "subjectId",
+        "examType",
+        "year",
+        "fileUrl",
+        "uploaderId",
+        "uploadDate"
+      ]
+    },
+    "Notice": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Notice",
+      "type": "object",
+      "description": "Represents a notice or announcement.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Notice entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the notice."
+        },
+        "content": {
+          "type": "string",
+          "description": "The content of the notice."
+        },
+        "date": {
+          "type": "string",
+          "description": "The date of the notice.",
+          "format": "date-time"
+        },
+        "authorId": {
+          "type": "string",
+          "description": "Reference to User who authored the notice. (Relationship: User 1:N Notice)"
+        },
+        "courseId": {
+          "type": "string",
+          "description": "Reference to Course. (Relationship: Course 1:N Notice)"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "content",
+        "date",
+        "authorId",
+        "courseId"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/courses/{courseId}",
+        "definition": {
+          "entityName": "Course",
+          "schema": {
+            "$ref": "#/backend/entities/Course"
+          },
+          "description": "Stores course information (e.g., BCA, BBA).",
+          "params": [
+            {
+              "name": "courseId",
+              "description": "The unique identifier of the course."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/courses/{courseId}/batches/{batchId}",
+        "definition": {
+          "entityName": "Batch",
+          "schema": {
+            "$ref": "#/backend/entities/Batch"
+          },
+          "description": "Stores batch information for each course (e.g., 1st year, 2nd year).",
+          "params": [
+            {
+              "name": "courseId",
+              "description": "The unique identifier of the course."
+            },
+            {
+              "name": "batchId",
+              "description": "The unique identifier of the batch."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/courses/{courseId}/batches/{batchId}/semesters/{semesterId}",
+        "definition": {
+          "entityName": "Semester",
+          "schema": {
+            "$ref": "#/backend/entities/Semester"
+          },
+          "description": "Stores semester information for each batch.",
+          "params": [
+            {
+              "name": "courseId",
+              "description": "The unique identifier of the course."
+            },
+            {
+              "name": "batchId",
+              "description": "The unique identifier of the batch."
+            },
+            {
+              "name": "semesterId",
+              "description": "The unique identifier of the semester."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/courses/{courseId}/batches/{batchId}/semesters/{semesterId}/sections/{sectionId}",
+        "definition": {
+          "entityName": "Section",
+          "schema": {
+            "$ref": "#/backend/entities/Section"
+          },
+          "description": "Stores section information for each semester.",
+          "params": [
+            {
+              "name": "courseId",
+              "description": "The unique identifier of the course."
+            },
+            {
+              "name": "batchId",
+              "description": "The unique identifier of the batch."
+            },
+            {
+              "name": "semesterId",
+              "description": "The unique identifier of the semester."
+            },
+            {
+              "name": "sectionId",
+              "description": "The unique identifier of the section."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/courses/{courseId}/batches/{batchId}/semesters/{semesterId}/subjects/{subjectId}",
+        "definition": {
+          "entityName": "Subject",
+          "schema": {
+            "$ref": "#/backend/entities/Subject"
+          },
+          "description": "Stores subject information for each semester.",
+          "params": [
+            {
+              "name": "courseId",
+              "description": "The unique identifier of the course."
+            },
+            {
+              "name": "batchId",
+              "description": "The unique identifier of the batch."
+            },
+            {
+              "name": "semesterId",
+              "description": "The unique identifier of the semester."
+            },
+            {
+              "name": "subjectId",
+              "description": "The unique identifier of the subject."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user information (Admin, Teacher, Student).",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_admin/{userId}",
+        "definition": {
+          "entityName": "Admin",
+          "schema": {
+            "$ref": "#/backend/entities/Admin"
+          },
+          "description": "Documents in this collection indicate admin privileges. Existence, not content, is used for authorization.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the admin user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/teachers/{teacherId}",
+        "definition": {
+          "entityName": "Teacher",
+          "schema": {
+            "$ref": "#/backend/entities/Teacher"
+          },
+          "description": "Stores teacher specific information.",
+          "params": [
+            {
+              "name": "teacherId",
+              "description": "The unique identifier of the teacher user; matches the user ID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/students/{studentId}",
+        "definition": {
+          "entityName": "Student",
+          "schema": {
+            "$ref": "#/backend/entities/Student"
+          },
+          "description": "Stores student specific information.",
+          "params": [
+            {
+              "name": "studentId",
+              "description": "The unique identifier of the student user; matches the user ID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/courses/{courseId}/batches/{batchId}/semesters/{semesterId}/sections/{sectionId}/students/{studentId}/attendance/{attendanceId}",
+        "definition": {
+          "entityName": "Attendance",
+          "schema": {
+            "$ref": "#/backend/entities/Attendance"
+          },
+          "description": "Stores attendance records for each student. Includes denormalized courseId, batchId, semesterId, and sectionId for simpler security rules.",
+          "params": [
+            {
+              "name": "courseId",
+              "description": "The unique identifier of the course."
+            },
+            {
+              "name": "batchId",
+              "description": "The unique identifier of the batch."
+            },
+            {
+              "name": "semesterId",
+              "description": "The unique identifier of the semester."
+            },
+            {
+              "name": "sectionId",
+              "description": "The unique identifier of the section."
+            },
+            {
+              "name": "studentId",
+              "description": "The unique identifier of the student."
+            },
+            {
+              "name": "attendanceId",
+              "description": "The unique identifier of the attendance record."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/study_materials/{studyMaterialId}",
+        "definition": {
+          "entityName": "StudyMaterial",
+          "schema": {
+            "$ref": "#/backend/entities/StudyMaterial"
+          },
+          "description": "Stores study materials. Includes denormalized teacherId and subjectId for simpler security rules.",
+          "params": [
+            {
+              "name": "studyMaterialId",
+              "description": "The unique identifier of the study material."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/question_papers/{questionPaperId}",
+        "definition": {
+          "entityName": "QuestionPaper",
+          "schema": {
+            "$ref": "#/backend/entities/QuestionPaper"
+          },
+          "description": "Stores question papers.",
+          "params": [
+            {
+              "name": "questionPaperId",
+              "description": "The unique identifier of the question paper."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/notices/{noticeId}",
+        "definition": {
+          "entityName": "Notice",
+          "schema": {
+            "$ref": "#/backend/entities/Notice"
+          },
+          "description": "Stores global notices.  Includes denormalized courseId for simpler security rules.",
+          "params": [
+            {
+              "name": "noticeId",
+              "description": "The unique identifier of the notice."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to support the CollegeMate AI application's role-based access control, attendance management, study material repository, and AI chatbot features. It emphasizes authorization independence, structural segregation, and data clarity. The structure avoids hierarchical authorization dependencies to ensure atomic operations and debuggability.\n\n**Authorization Independence:**\n*   The design avoids using `get()` calls in security rules by denormalizing authorization context where needed. For example, if access to `StudyMaterial` depends on the teacher and subject, the `teacherId` and `subjectId` are directly present within the `StudyMaterial` document, eliminating the need to fetch parent document data. This principle applies across various collections where ownership or membership dictates access.\n\n**Structural Segregation:**\n*   The structure segregates data based on access requirements. User roles (Admin, Teacher, Student) are explicitly defined and used in path-based security rules. This ensures that each collection has a homogeneous security posture. For example, administrative data is kept separate from student data, and teacher-uploaded content is distinct from global notices.\n\n**Access Modeling:**\n*   **Private Data:** User-specific data is stored under the `/users/{userId}` path, ensuring that only the user has access to their data.\n*   **Hierarchical Paths:** User-owned entities like attendance records are nested under user paths (`/users/{userId}/attendance/{attendanceId}`), providing straightforward ownership-based security rules.\n*   **Collaborative Data:** While not explicitly collaborative in the current design, if a feature requiring shared access were added, a membership map (`members: {uid1: \"role\", uid2: \"role\"}`) would be utilized and denormalized as necessary.\n\n**QAPs (Rules are not Filters):**\n*   The data structure supports secure `list` operations by ensuring that rules can authorize access without needing to filter data. Path-based ownership and role-based access control allow for efficient querying and listing of documents based on user roles and permissions.\n\n*   **Example:** Listing study materials for a specific subject can be secured by verifying that the user is a student enrolled in that subject or a teacher assigned to that subject, based on data denormalized in the `StudyMaterial` document.\n\n**Global Roles (DBAC):**\n*   The existence of a document in collections like `/roles_admin/{uid}` indicates admin privileges.\n\n**Invariants:**\n*   The structure enforces data integrity through explicit ownership (e.g., `teacherId` in `StudyMaterial`), timestamp fields (e.g., `uploadDate`), and denormalized data for consistent access control."
+  }
+}
