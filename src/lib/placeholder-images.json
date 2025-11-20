@@ -1,3 +1,46 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-background",
+      "description": "Abstract background image for the login page",
+      "imageUrl": "https://images.unsplash.com/photo-1573655349936-de6bed86f839?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxhYnN0cmFjdCUyMHRleHR1cmV8ZW58MHx8fHwxNzYzNTQzMDE3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "abstract texture"
+    },
+    {
+      "id": "admin-avatar",
+      "description": "Avatar for the admin user",
+      "imageUrl": "https://images.unsplash.com/photo-1573496527892-904f897eb744?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cHJvZmVzc2lvbmFsJTIwd29tYW58ZW58MHx8fHwxNzYzNjMyODU2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "professional woman"
+    },
+    {
+      "id": "teacher-avatar",
+      "description": "Avatar for the teacher user",
+      "imageUrl": "https://images.unsplash.com/photo-1753164727405-4685c1949159?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxtYW4lMjB0ZWFjaGluZ3xlbnwwfHx8fDE3NjM2NDg3OTB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "man teaching"
+    },
+    {
+      "id": "student-avatar",
+      "description": "Avatar for the student user",
+      "imageUrl": "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxjb2xsZWdlJTIwc3R1ZGVudHxlbnwwfHx8fDE3NjM2NDg3OTB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "college student"
+    },
+    {
+      "id": "student-1",
+      "description": "Avatar for student 1",
+      "imageUrl": "https://images.unsplash.com/photo-1554727242-741c14fa561c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxwZXJzb24lMjBzbWlsaW5nfGVufDB8fHx8MTc2MzYxNjMzM3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person smiling"
+    },
+    {
+      "id": "student-2",
+      "description": "Avatar for student 2",
+      "imageUrl": "https://images.unsplash.com/photo-1536351177167-7275d582546e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHx5b3VuZyUyMHdvbWFufGVufDB8fHx8MTc2MzU3MDY5MXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "young woman"
+    },
+    {
+      "id": "student-3",
+      "description": "Avatar for student 3",
+      "imageUrl": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxwZXJzb24lMjBwb3J0cmFpdHxlbnwwfHx8fDE3NjM1ODUwMzd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person portrait"
+    }
+  ]
 }
