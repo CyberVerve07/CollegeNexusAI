@@ -4,14 +4,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, KeyRound } from "lucide-react";
-import { useUser } from "@/contexts/user-context";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-  CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,8 +20,8 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
+  User as FirebaseUser,
 } from "firebase/auth";
-import { users } from "@/lib/data";
 import { Separator } from "@/components/ui/separator";
 
 const GoogleIcon = () => (
@@ -57,12 +55,10 @@ export function LoginCard() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLoginSuccess = (user: any) => {
-    const mockUser = users.find(u => u.email === user.email);
-
+  const handleLoginSuccess = (user: FirebaseUser) => {
     toast({
         title: "Login Successful",
-        description: `Welcome back, ${mockUser?.name || user.email}!`,
+        description: `Welcome back, ${user.displayName || user.email}!`,
     });
     router.push("/dashboard");
   }
@@ -94,6 +90,7 @@ export function LoginCard() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!auth) return;
     setIsLoading(true);
 
     try {
@@ -107,6 +104,7 @@ export function LoginCard() {
   };
 
   const handleGoogleLogin = async () => {
+    if (!auth) return;
     setIsLoading(true);
     const provider = new GoogleAuthProvider();
     try {
