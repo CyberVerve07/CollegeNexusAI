@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { UserProvider } from "@/contexts/user-context";
-import { FirebaseClientProvider } from "@/firebase";
 
 export const metadata: Metadata = {
   title: "CollegeNexus AI",
@@ -25,12 +24,10 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased">
-        <FirebaseClientProvider>
-          <UserProvider>
-            {children}
-            <Toaster />
-          </UserProvider>
-        </FirebaseClientProvider>
+        <UserProvider>
+          {children}
+          <Toaster />
+        </UserProvider>
       </body>
     </html>
   );

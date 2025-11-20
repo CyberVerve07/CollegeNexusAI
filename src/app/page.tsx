@@ -1,7 +1,8 @@
 import Image from "next/image";
 import { Building2 } from "lucide-react";
-import { LoginCard } from "@/components/login-card";
 import placeholderImages from '@/lib/placeholder-images.json'
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const heroImage = placeholderImages.placeholderImages.find(p => p.id === "hero-background");
@@ -25,9 +26,11 @@ export default function Home() {
           </h1>
         </div>
         <p className="max-w-2xl mx-auto mb-10 text-lg text-muted-foreground">
-          Your all-in-one college management solution. Please sign in to continue.
+          Your all-in-one college management solution.
         </p>
-        <LoginCard />
+        <Button asChild>
+            <Link href="/dashboard">Go to Dashboard</Link>
+        </Button>
       </div>
     </main>
   );
