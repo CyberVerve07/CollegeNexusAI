@@ -9,19 +9,17 @@ import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const router = useRouter();
 
   useEffect(() => {
-    if (user === null) {
-      const storedRole = localStorage.getItem('userRole');
-      if (!storedRole) {
-        router.push('/');
-      }
+    if (!isUserLoading && !user) {
+      // If loading is finished and there's no user, redirect to home.
+      router.push('/');
     }
-  }, [user, router]);
+  }, [user, isUserLoading, router]);
   
-  if (!user) {
+  if (isUserLoading || !user) {
     return (
         <div className="flex items-center justify-center min-h-screen bg-background">
             <div className="flex items-center space-x-2">

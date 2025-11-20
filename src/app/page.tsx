@@ -25,7 +25,7 @@ export default function Home() {
           </h1>
         </div>
         <p className="max-w-2xl mx-auto mb-10 text-lg text-muted-foreground">
-          Your all-in-one college management solution. Please select your role to continue.
+          Your all-in-one college management solution. Please sign in to continue.
         </p>
         <LoginCard />
       </div>
