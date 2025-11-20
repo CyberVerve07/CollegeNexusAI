@@ -95,7 +95,8 @@ export function LoginCard() {
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      handleLoginSuccess(userCredential.user);
+      // The UserProvider will handle the redirection via the useEffect hook
+      // handleLoginSuccess(userCredential.user);
     } catch (error: any) {
       handleLoginError(error);
     } finally {
@@ -108,8 +109,8 @@ export function LoginCard() {
     setIsLoading(true);
     const provider = new GoogleAuthProvider();
     try {
-        const result = await signInWithPopup(auth, provider);
-        handleLoginSuccess(result.user);
+        await signInWithPopup(auth, provider);
+        // The UserProvider will handle the redirection via the useEffect hook
     } catch (error: any) {
         handleLoginError(error);
     } finally {
