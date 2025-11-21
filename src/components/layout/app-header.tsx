@@ -23,6 +23,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/firebase";
+import { signOut } from "firebase/auth";
 import { useUser } from "@/contexts/user-context";
 import placeholderImages from '@/lib/placeholder-images.json'
 
@@ -60,12 +62,13 @@ function Breadcrumbs() {
 }
 
 export function AppHeader() {
-  const { user, logout } = useUser();
+  const { user } = useUser();
+  const auth = useAuth();
   const router = useRouter();
   const avatar = placeholderImages.placeholderImages.find(p => p.id === user?.avatar);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut(auth);
     router.push('/');
   };
 

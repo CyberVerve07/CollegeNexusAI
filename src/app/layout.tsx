@@ -1,8 +1,7 @@
 
 import type { Metadata } from "next";
 import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
-import { UserProvider } from "@/contexts/user-context";
+import { FirebaseClientProvider } from "@/firebase";
 
 export const metadata: Metadata = {
   title: "CollegeNexus AI",
@@ -24,12 +23,12 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
-        <meta name="theme-color" content="#E11D48" />
+        <meta name="theme-color" content="#3F51B5" />
       </head>
       <body className="font-body antialiased">
-        <UserProvider>
+        <FirebaseClientProvider>
           {children}
-        </UserProvider>
+        </FirebaseClientProvider>
       </body>
     </html>
   );

@@ -62,11 +62,12 @@ const navItemsMap = {
 export function AppSidebar() {
   const { user } = useUser();
   const pathname = usePathname();
-  const navItems = user ? navItemsMap[user.role] : [];
-
+  
   if (!user) {
     return null; // Don't render sidebar if no user is logged in
   }
+
+  const navItems = navItemsMap[user.role];
 
   return (
     <Sidebar>

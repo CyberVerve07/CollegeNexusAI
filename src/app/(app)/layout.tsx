@@ -5,9 +5,10 @@ import { AppHeader } from "@/components/layout/app-header";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/toaster";
-import { useUser } from "@/contexts/user-context";
+import { useUser } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
@@ -19,10 +20,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [user, isUserLoading, router]);
 
-  if (!user) {
+  if (isUserLoading || !user) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <p>Loading...</p>
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
