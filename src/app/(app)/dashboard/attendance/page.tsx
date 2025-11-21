@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useUser } from "@/contexts/user-context";
@@ -29,7 +30,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Clock, XCircle, BarChart, Percent } from "lucide-react";
+import { CheckCircle, Clock, XCircle, BarChart, Percent, Loader2 } from "lucide-react";
 import { teachers, subjects, students as allStudents, attendanceRecords } from "@/lib/data";
 import { Teacher, Student, AttendanceStatus } from "@/lib/types";
 import { Progress } from "@/components/ui/progress";
@@ -41,10 +42,13 @@ function TeacherAttendanceView() {
   const { toast } = useToast();
   const teacherData = useMemo(() => teachers.find((t) => t.id === user?.id) as Teacher, [user]);
 
-  const assignedSubjects = useMemo(() => teacherData?.assignedSubjects.map((as) => {
+  const assignedSubjects = useMemo(() => {
+    if (!teacherData) return [];
+    return teacherData.assignedSubjects.map((as) => {
     const subject = subjects.find((s) => s.id === as.subjectId);
     return subject ? { ...subject, section: as.section } : null;
-  }).filter(Boolean), [teacherData]);
+  }).filter(Boolean);
+}, [teacherData]);
 
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
   const [attendance, setAttendance] = useState<{ [studentId: string]: AttendanceStatus }>({});
@@ -70,6 +74,10 @@ function TeacherAttendanceView() {
     });
   };
   
+  if (!teacherData) {
+    return <Loader2 className="animate-spin" />;
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -213,7 +221,12 @@ function StudentAttendanceView() {
 }
 
 export default function AttendancePage() {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
+  
+  if (isUserLoading) {
+    return <div className="flex justify-center items-center h-full"><Loader2 className="animate-spin" /></div>;
+  }
+  
   if (!user) return null;
   return user.role === "teacher" ? <TeacherAttendanceView /> : <StudentAttendanceView />;
 }

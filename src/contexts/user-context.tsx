@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useMemo } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useMemo, useEffect } from 'react';
 import type { User } from '@/lib/types';
 import { users as mockUsers } from '@/lib/data';
 import { useRouter } from 'next/navigation';
@@ -17,10 +17,24 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isUserLoading, setUserLoading] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    // Simulate loading user from a session
+    const storedUserRole = sessionStorage.getItem('userRole');
+    if (storedUserRole) {
+      const userToSet = mockUsers.find(u => u.role === storedUserRole);
+      if (userToSet) {
+        setUser(userToSet);
+      }
+    }
+    setUserLoading(false);
+  }, []);
 
   const logout = () => {
     setUser(null);
+    sessionStorage.removeItem('userRole');
     router.push('/');
   };
   
@@ -42,6 +56,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     if(userToSet) {
         setUser(userToSet);
+        sessionStorage.setItem('userRole', userToSet.role);
         return true;
     }
 
@@ -49,11 +64,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }
 
   const value = useMemo(() => ({
-    user: user,
-    isUserLoading: false,
+    user,
+    isUserLoading,
     logout,
     loginWithPassword,
-  }), [user]);
+  }), [user, isUserLoading]);
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 }

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/contexts/user-context";
 import {
@@ -20,10 +20,16 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const router = useRouter();
-  const { loginWithPassword } = useUser();
+  const { user, loginWithPassword } = useUser();
   const { toast } = useToast();
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      router.push("/dashboard");
+    }
+  }, [user, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +42,7 @@ export default function Home() {
         title: "Login Successful",
         description: "Redirecting to your dashboard...",
       });
-      router.push("/dashboard");
+      // The useEffect will handle the redirect
     } else {
       toast({
         variant: "destructive",
