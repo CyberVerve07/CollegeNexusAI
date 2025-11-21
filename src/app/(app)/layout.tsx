@@ -5,7 +5,7 @@ import { AppHeader } from "@/components/layout/app-header";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/toaster";
-import { useUser } from "@/firebase";
+import { useUser } from "@/contexts/user-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
