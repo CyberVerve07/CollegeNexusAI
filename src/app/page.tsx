@@ -137,7 +137,7 @@ export default function Home() {
                 id="password"
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.targe.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter password"
                 required
                 disabled={isLoading}
