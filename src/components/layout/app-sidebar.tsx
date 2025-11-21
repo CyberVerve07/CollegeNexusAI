@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from "next/link";
@@ -63,6 +64,10 @@ export function AppSidebar() {
   const pathname = usePathname();
   const navItems = user ? navItemsMap[user.role] : [];
 
+  if (!user) {
+    return null; // Don't render sidebar if no user is logged in
+  }
+
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border">
@@ -77,19 +82,19 @@ export function AppSidebar() {
         <SidebarMenu>
           {navItems.map((item) => (
             <SidebarMenuItem key={item.href}>
-              <Link href={item.href} passHref>
-                <SidebarMenuButton
-                  as="a"
-                  isActive={pathname === item.href}
-                  tooltip={item.label}
-                  className="justify-start"
-                >
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === item.href}
+                tooltip={item.label}
+                className="justify-start"
+              >
+                <Link href={item.href}>
                   <item.icon className="h-5 w-5" />
                   <span className="transition-opacity duration-200 group-data-[collapsible=icon]:opacity-0">
                     {item.label}
                   </span>
-                </SidebarMenuButton>
-              </Link>
+                </Link>
+              </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>

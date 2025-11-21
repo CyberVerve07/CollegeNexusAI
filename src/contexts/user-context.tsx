@@ -3,42 +3,56 @@
 
 import React, { createContext, useContext, useState, ReactNode, useMemo } from 'react';
 import type { User } from '@/lib/types';
-import { users as mockUsers, students } from '@/lib/data';
+import { users as mockUsers } from '@/lib/data';
+import { useRouter } from 'next/navigation';
 
 interface UserContextType {
   user: User | null;
   isUserLoading: boolean;
   logout: () => void;
-  setUserRole: (role: 'student' | 'teacher' | 'admin') => void;
+  loginWithPassword: (password: string) => boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  // Default to the first student user, or null if not available
-  const initialUser = mockUsers.find(u => u.role === 'student') || null;
-  const [user, setUser] = useState<User | null>(initialUser);
+  const [user, setUser] = useState<User | null>(null);
+  const router = useRouter();
 
   const logout = () => {
-    // In a real app, this would also clear tokens, etc.
     setUser(null);
+    router.push('/');
   };
   
-  const setUserRole = (role: 'student' | 'teacher' | 'admin') => {
-    const userToSet = mockUsers.find(u => u.role === role);
-    if(role === 'student') {
-        const studentUser = students[0];
-        setUser(studentUser as User);
-    } else {
-        setUser(userToSet || null);
+  const loginWithPassword = (password: string): boolean => {
+    let userToSet: User | undefined;
+    switch (password) {
+        case 'admin123':
+            userToSet = mockUsers.find(u => u.role === 'admin');
+            break;
+        case 'teacher123':
+            userToSet = mockUsers.find(u => u.role === 'teacher');
+            break;
+        case 'student123':
+            userToSet = mockUsers.find(u => u.role === 'student');
+            break;
+        default:
+            userToSet = undefined;
     }
+
+    if(userToSet) {
+        setUser(userToSet);
+        return true;
+    }
+
+    return false;
   }
 
   const value = useMemo(() => ({
     user: user,
-    isUserLoading: false, // No longer loading from an async source
+    isUserLoading: false,
     logout,
-    setUserRole,
+    loginWithPassword,
   }), [user]);
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

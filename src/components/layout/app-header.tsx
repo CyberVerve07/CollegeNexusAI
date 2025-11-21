@@ -1,7 +1,8 @@
+
 "use client";
 
 import React from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   Bell,
@@ -60,7 +61,13 @@ function Breadcrumbs() {
 
 export function AppHeader() {
   const { user, logout } = useUser();
+  const router = useRouter();
   const avatar = placeholderImages.placeholderImages.find(p => p.id === user?.avatar);
+
+  const handleLogout = () => {
+    logout();
+    router.push('/');
+  };
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
@@ -87,14 +94,15 @@ export function AppHeader() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
-                {avatar && <Image
+                {user && avatar && <Image
                     src={avatar.imageUrl}
                     width={36}
                     height={36}
-                    alt={user?.name || 'User Avatar'}
+                    alt={user.name}
                     data-ai-hint={avatar.imageHint}
                     className="rounded-full"
                 />}
+                 {!avatar && user && <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground">{user.name.charAt(0)}</div>}
               <span className="sr-only">Toggle user menu</span>
             </Button>
           </DropdownMenuTrigger>
@@ -113,7 +121,7 @@ export function AppHeader() {
               <span>Settings</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout}>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               <span>Log out</span>
             </DropdownMenuItem>
