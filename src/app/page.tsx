@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser, useAuth } from "@/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import {
   Card,
   CardContent,
@@ -59,20 +59,41 @@ export default function Home() {
     const email = roleEmails[selectedRole];
     
     try {
+      // First, try to sign in.
       await signInWithEmailAndPassword(auth, email, password);
       toast({
         title: "Login Successful",
         description: "Redirecting to your dashboard...",
       });
-      // The useEffect will handle the redirect
-    } catch (error) {
-      console.error("Login Error:", error);
-      toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: "Invalid credentials. Please check your role and password.",
-      });
-      setIsLoading(false);
+    } catch (error: any) {
+      // If sign-in fails because the user doesn't exist, create the user.
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
+        try {
+          await createUserWithEmailAndPassword(auth, email, password);
+          toast({
+            title: "Account Created & Logged In",
+            description: "Redirecting to your dashboard...",
+          });
+          // The useEffect will handle redirect after state change
+        } catch (creationError: any) {
+          console.error("Account Creation Error:", creationError);
+          toast({
+            variant: "destructive",
+            title: "Registration Failed",
+            description: creationError.message || "Could not create an account for this role.",
+          });
+          setIsLoading(false);
+        }
+      } else {
+        // Handle other login errors (e.g., wrong password for an existing user)
+        console.error("Login Error:", error);
+        toast({
+          variant: "destructive",
+          title: "Login Failed",
+          description: "Invalid credentials. Please check your role and password.",
+        });
+        setIsLoading(false);
+      }
     }
   };
 
