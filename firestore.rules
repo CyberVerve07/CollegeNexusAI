@@ -1,278 +1,290 @@
 /**
- * Core Philosophy: This ruleset enforces a strict role-based access control model
- * for a college management application. The three primary roles are ADMIN, TEACHER,
- * and STUDENT. Admins have broad control over academic structure and user roles.
- * Teachers can manage their own content (like study materials) and student attendance.
- * Students can access their own private data and general academic information.
+ * This ruleset enforces a strict role-based access control (RBAC) model for a
+ * college management application.
+ *
+ * Core Philosophy:
+ * The security model is built around three user roles: ADMIN, TEACHER, and
+ * STUDENT. Admins have broad management capabilities. Teachers can manage
+ * content they create (e.g., study materials) and view assigned data. Students
+ * can access their own personal data (e.g., attendance) and general academic
+ * information. The default posture requires users to be authenticated to read
+ * any data.
  *
  * Data Structure:
- * - /users/{userId}: Private user profile data, accessible only by the owner.
- * - /students/{studentId}, /teachers/{teacherId}: Role-specific profiles.
- * - /roles_admin/{userId}: A lookup collection to grant admin privileges.
- * - /courses/{courseId}/...: A nested hierarchy for academic structure (batches,
- *   semesters, etc.), which is publicly readable by authenticated users but
- *   managed exclusively by Admins.
- * - /study_materials, /question_papers, /notices: Top-level collections for
- *   shared academic content, readable by authenticated users, with write
- *   access restricted to the content's author (a Teacher or Admin).
+ * The structure mixes top-level public-read collections (like /courses, /notices)
+ * with user-specific data collections (/users, /students, /teachers).
+ * User-specific subcollections (e.g., /students/{studentId}/attendance) enforce
+ * a clear ownership hierarchy. A dedicated /roles_admin collection is used for
+ * efficient and secure administrator role checks.
  *
  * Key Security Decisions:
- * - User Listing Disabled: Direct listing of the /users, /students, or /teachers
- *   collections is prohibited to protect user privacy.
- * - Role-Based Access: A user's role is determined by the existence of a document
- *   in helper collections like /roles_admin or /teachers. This provides a fast
- *   and secure way to check permissions.
- * - Denormalization for Authorization: Ownership fields (e.g., `teacherId`,
- *   `authorId`) are stored directly on documents like `StudyMaterial` and `Notice`.
- *   This avoids slow and costly `get()` calls in security rules, making authorization
- *   checks simple and performant. For example, a rule for `/study_materials` can
- *   check `resource.data.teacherId` directly.
- * - Default Secure: By default, access is denied. Rules explicitly grant permissions
- *   based on user authentication and role. Any operation not explicitly allowed is
- *   rejected.
+ * - Admin Role: A user is considered an admin if a corresponding document
+ *   exists for them in the `/roles_admin` collection. This is a performant
+ *   pattern that avoids storing roles on the user document itself.
+ * - Public Data: General academic data (courses, subjects, notices, etc.) is
+ *   readable by any authenticated user but can only be modified by Admins,
+ *   or in some cases, the original content creator (e.g., a Teacher uploading
+ *   study material).
+ * - User Data Privacy: Users can only read and modify their own `/users/{userId}`
+ *   document. Listing all users is strictly forbidden to prevent data scraping.
+ *   Similarly, students and teachers can only access their specific documents
+ *   in `/students` and `/teachers`.
+ *
+ * Denormalization for Authorization:
+ * To create simpler, faster rules, data required for authorization is denormalized.
+ * For example, a `StudyMaterial` document contains a `teacherId` field, and a
+ * `QuestionPaper` contains an `uploaderId`. This allows for direct ownership
+ * checks (`isOwner(resource.data.teacherId)`) without needing slow and costly
+ * `get()` calls to other documents.
+ *
+ * Structural Segregation:
+ * Different user types (`students`, `teachers`) are stored in separate top-level
+ * collections. This simplifies rules and security for list operations, ensuring a
+ * student cannot accidentally query teacher-specific information.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // --------------------------------------------------------------------
     // Helper Functions
-    // --------------------------------
+    // --------------------------------------------------------------------
 
     /**
-     * Checks if a user is authenticated.
+     * Checks if the user is authenticated.
      */
     function isSignedIn() {
       return request.auth != null;
     }
 
     /**
-     * Checks if the requesting user's UID matches a given document ID or owner ID.
+     * Checks if the authenticated user's UID matches the provided userId.
+     * This is the primary function for establishing document ownership.
      */
     function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+      return request.auth.uid == userId;
     }
 
     /**
-     * Checks if a document exists. This is crucial for safe update and delete
-     * operations, preventing modifications to non-existent data.
+     * Combines an ownership check with an existence check.
+     * CRITICAL for all update and delete operations to prevent modifying
+     * non-existent data.
      */
-    function isExistingDoc() {
-      return resource != null;
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
     }
 
     /**
-     * Checks if the user is an administrator by verifying the existence of a
-     * corresponding document in the roles_admin collection.
+     * Checks if the requesting user has an Admin role.
+     * This is determined by the existence of a document in the roles_admin collection.
      */
     function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+      return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
-    /**
-     * Checks if the user is a teacher by verifying the existence of a
-     * corresponding document in the teachers collection.
-     */
-    function isTeacher() {
-      return isSignedIn() && exists(/databases/$(database)/documents/teachers/$(request.auth.uid));
-    }
+    // --------------------------------------------------------------------
+    // User and Role Management
+    // --------------------------------------------------------------------
 
     /**
-     * Validates that the owner ID field of a new resource being created
-     * matches the authenticated user's ID.
-     */
-    function isNewResourceOwner(data) {
-      return isSignedIn() && data.get('uploaderId', data.get('authorId', data.get('teacherId', ''))) == request.auth.uid;
-    }
-
-    /**
-     * Validates that the owner ID of an existing resource matches the
-     * authenticated user's ID.
-     */
-    function isExistingResourceOwner() {
-      let ownerId = resource.data.get('uploaderId', resource.data.get('authorId', resource.data.get('teacherId', '')));
-      return isOwner(ownerId);
-    }
-    
-    // Collection Rules
-    // --------------------------------
-
-    /**
-     * @description Defines the rules for academic structure (courses, batches, etc.).
-     *   This data is readable by any authenticated user but can only be modified
-     *   by administrators.
-     * @path /courses/{courseId}
-     * @allow (get) An authenticated student can read a course document.
-     * @deny (create) A teacher attempts to create a new course.
-     * @principle Segregates public-read data from admin-only write operations.
-     */
-    match /courses/{courseId} {
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if isAdmin();
-
-      /**
-       * @description Rules for batches within a course.
-       * @path /courses/{courseId}/batches/{batchId}
-       * @allow (get) An authenticated user can read a batch document.
-       * @deny (update) A student attempts to update a batch.
-       * @principle Inherits security from the parent, allowing public reads and admin writes.
-       */
-      match /batches/{batchId} {
-        allow get, list: if isSignedIn();
-        allow create, update, delete: if isAdmin();
-
-        /**
-         * @description Rules for semesters within a batch.
-         * @path /courses/{courseId}/batches/{batchId}/semesters/{semesterId}
-         * @allow (get) An authenticated user can read a semester document.
-         * @deny (create) A teacher attempts to create a semester.
-         * @principle Inherits security from the parent, allowing public reads and admin writes.
-         */
-        match /semesters/{semesterId} {
-          allow get, list: if isSignedIn();
-          allow create, update, delete: if isAdmin();
-
-          /**
-           * @description Rules for sections within a semester.
-           * @path /courses/{courseId}/batches/{batchId}/semesters/{semesterId}/sections/{sectionId}
-           * @allow (get) An authenticated user can read a section document.
-           * @deny (delete) A student attempts to delete a section.
-           * @principle Inherits security from the parent, allowing public reads and admin writes.
-           */
-          match /sections/{sectionId} {
-            allow get, list: if isSignedIn();
-            allow create, update, delete: if isAdmin();
-
-            /**
-             * @description Rules for student attendance records. A student can read their
-             *   own attendance, and teachers can read and write all attendance records.
-             * @path /courses/{courseId}/batches/{batchId}/semesters/{semesterId}/sections/{sectionId}/students/{studentId}/attendance/{attendanceId}
-             * @allow (create) A teacher creates an attendance record for a student.
-             * @deny (update) A student tries to change their own attendance status.
-             * @principle Enforces role-based permissions where teachers manage data and students have read-only access to their own records.
-             */
-            match /students/{studentId}/attendance/{attendanceId} {
-              allow get, list: if isOwner(studentId) || isTeacher();
-              allow create: if isTeacher();
-              allow update, delete: if isTeacher() && isExistingDoc();
-            }
-          }
-
-          /**
-           * @description Rules for subjects within a semester.
-           * @path /courses/{courseId}/batches/{batchId}/semesters/{semesterId}/subjects/{subjectId}
-           * @allow (get) An authenticated user can read a subject document.
-           * @deny (create) A student attempts to add a new subject.
-           * @principle Inherits security from the parent, allowing public reads and admin writes.
-           */
-          match /subjects/{subjectId} {
-            allow get, list: if isSignedIn();
-            allow create, update, delete: if isAdmin();
-          }
-        }
-      }
-    }
-
-    /**
-     * @description Generic user profiles. Users can create and manage their own
-     *   profile document. Listing users is forbidden to protect privacy.
-     * @path /users/{userId}
-     * @allow (create) A new user signs up and creates their own user document.
-     * @deny (get) A user tries to read another user's profile document.
-     * @deny (list) An attacker tries to list all users in the system.
-     * @principle Restricts access to a user's own data tree.
+     * @description Manages user profile data. Users can create and manage their own
+     *              profile. Admins can view any profile and delete accounts.
+     * @path        /users/{userId}
+     * @allow       A user (uid: 'user123') creates their own profile at `/users/user123`. (create)
+     * @deny        A user (uid: 'user123') tries to read another user's profile at `/users/user456`. (get)
+     * @principle   Restricts access to a user's own data tree and enforces self-creation.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId);
+      allow get: if isOwner(userId) || isAdmin();
       allow list: if false;
-      allow create: if isOwner(userId);
-      allow update, delete: if isOwner(userId) && isExistingDoc();
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId) || (isAdmin() && resource != null);
     }
 
     /**
-     * @description Administrator role documents. The existence of a document here grants
-     *   admin privileges. Only other admins can manage these roles.
-     * @path /roles_admin/{userId}
-     * @allow (create) An existing admin grants admin rights to another user.
-     * @deny (get) A non-admin user tries to check if another user is an admin.
-     * @principle Centralizes admin role management for use in helper functions.
-     */
-    match /roles_admin/{userId} {
-      allow get, list: if isAdmin();
-      allow create, update, delete: if isAdmin();
-    }
-
-    /**
-     * @description Teacher-specific profiles. These documents are provisioned and
-     *   managed by administrators. Teachers can read their own profile.
-     * @path /teachers/{teacherId}
-     * @allow (get) A teacher reads their own profile document.
-     * @deny (create) A user attempts to create a teacher profile for themselves.
-     * @principle Enforces that staff roles must be managed by an administrator.
-     */
-    match /teachers/{teacherId} {
-      allow get: if isOwner(teacherId) || isAdmin();
-      allow list: if false;
-      allow create, update, delete: if isAdmin();
-    }
-
-    /**
-     * @description Student-specific profiles. Students can create and manage their own
-     *   profile. Admins also have management access.
-     * @path /students/{studentId}
-     * @allow (create) A student registers and creates their own profile.
-     * @deny (update) A student tries to update another student's profile information.
-     * @principle Allows self-service for students while retaining admin oversight.
+     * @description Manages student-specific data records. Only Admins can create or modify
+     *              these records. A student can read their own record.
+     * @path        /students/{studentId}
+     * @allow       A student (uid: 'student123') reads their own data at `/students/student123`. (get)
+     * @deny        A teacher tries to create a new student record. (create)
+     * @principle   Enforces admin-only management for critical student enrollment data.
      */
     match /students/{studentId} {
       allow get: if isOwner(studentId) || isAdmin();
       allow list: if false;
-      allow create: if isOwner(studentId) || isAdmin();
-      allow update, delete: if (isOwner(studentId) || isAdmin()) && isExistingDoc();
+      allow create: if isAdmin() && request.resource.data.userId == studentId;
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
     }
 
     /**
-     * @description Study materials uploaded by teachers. All authenticated users
-     *   can read materials, but only the original teacher can modify or delete them.
-     * @path /study_materials/{studyMaterialId}
-     * @allow (create) A teacher with UID 'teacher123' uploads a document with `teacherId: 'teacher123'`.
-     * @deny (update) A student attempts to edit the title of a study material.
-     * @deny (delete) A teacher tries to delete another teacher's uploaded material.
-     * @principle Enforces document ownership for writes, ensuring content integrity.
+     * @description Manages teacher-specific data records. Only Admins can create or modify
+     *              these records. A teacher can read their own record.
+     * @path        /teachers/{teacherId}
+     * @allow       A teacher (uid: 'teacher123') reads their own data at `/teachers/teacher123`. (get)
+     * @deny        A student tries to view a teacher's record. (get)
+     * @principle   Enforces admin-only management for teacher data.
      */
-    match /study_materials/{studyMaterialId} {
-      allow get, list: if isSignedIn();
-      allow create: if isTeacher() && isNewResourceOwner(request.resource.data);
-      allow update, delete: if isTeacher() && isExistingDoc() && isExistingResourceOwner();
+    match /teachers/{teacherId} {
+      allow get: if isOwner(teacherId) || isAdmin();
+      allow list: if false;
+      allow create: if isAdmin() && request.resource.data.userId == teacherId;
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
     }
 
     /**
-     * @description Question papers uploaded by teachers or admins. All authenticated
-     *   users can read them, but only the uploader can manage them.
-     * @path /question_papers/{questionPaperId}
-     * @allow (create) An admin uploads a new question paper, setting `uploaderId` to their own UID.
-     * @deny (update) A student tries to modify a question paper document.
-     * @deny (delete) An admin tries to delete a paper uploaded by a teacher.
-     * @principle Enforces document ownership for writes for authorized roles (Admin, Teacher).
+     * @description Manages student attendance. A student can view their own attendance.
+     *              Only Admins can create or modify attendance records.
+     * @path        /students/{studentId}/attendance/{attendanceId}
+     * @allow       A student (uid: 'student123') lists their attendance records. (list)
+     * @deny        A teacher tries to create an attendance record for a student. (create)
+     * @principle   Secures sensitive student data to the student themselves, with admin oversight.
+     */
+    match /students/{studentId}/attendance/{attendanceId} {
+      allow get: if isOwner(studentId) || isAdmin();
+      allow list: if isOwner(studentId) || isAdmin();
+      allow create: if isAdmin() && request.resource.data.studentId == studentId;
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
+    }
+
+    /**
+     * @description Manages the mapping of teachers to their subjects. Only Admins
+     *              can create these assignments. Assigned teachers can view their own.
+     * @path        /teacher_subjects/{teacherSubjectId}
+     * @allow       An Admin creates a new teacher-subject assignment. (create)
+     * @deny        A teacher tries to list all assignments for all teachers. (list)
+     * @principle   Centralizes control of academic assignments to administrators.
+     */
+    match /teacher_subjects/{teacherSubjectId} {
+      allow get: if (resource != null && isOwner(resource.data.teacherId)) || isAdmin();
+      allow list: if false;
+      allow create: if isAdmin();
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
+    }
+
+    /**
+     * @description A special collection to grant Admin privileges. Existence of a
+     *              document here makes a user an admin. Only admins can manage this list.
+     * @path        /roles_admin/{userId}
+     * @allow       An existing Admin adds a new user to the admin list. (create)
+     * @deny        A regular user tries to read the list of admins. (get, list)
+     * @principle   Implements a secure and performant role-lookup system.
+     */
+    match /roles_admin/{userId} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
+    }
+
+    // --------------------------------------------------------------------
+    // Academic Structure (Admin-Managed)
+    // --------------------------------------------------------------------
+
+    /**
+     * @description Manages core academic structure like courses, batches, semesters,
+     *              sections, and subjects. This data is readable by all signed-in users
+     *              but is managed exclusively by Admins.
+     * @path        /courses/{courseId} and its subcollections
+     * @allow       A student reads the list of available courses. (list)
+     * @deny        A teacher tries to add a new subject to a course. (create)
+     * @principle   Protects foundational data integrity by restricting writes to Admins.
+     */
+    match /courses/{courseId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isAdmin();
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
+
+      match /batches/{batchId} {
+        allow get: if isSignedIn();
+        allow list: if isSignedIn();
+        allow create: if isAdmin();
+        allow update: if isAdmin() && resource != null;
+        allow delete: if isAdmin() && resource != null;
+
+        match /semesters/{semesterId} {
+          allow get: if isSignedIn();
+          allow list: if isSignedIn();
+          allow create: if isAdmin();
+          allow update: if isAdmin() && resource != null;
+          allow delete: if isAdmin() && resource != null;
+
+          match /sections/{sectionId} {
+            allow get: if isSignedIn();
+            allow list: if isSignedIn();
+            allow create: if isAdmin();
+            allow update: if isAdmin() && resource != null;
+            allow delete: if isAdmin() && resource != null;
+          }
+        }
+      }
+
+      match /subjects/{subjectId} {
+        allow get: if isSignedIn();
+        allow list: if isSignedIn();
+        allow create: if isAdmin();
+        allow update: if isAdmin() && resource != null;
+        allow delete: if isAdmin() && resource != null;
+      }
+    }
+
+    // --------------------------------------------------------------------
+    // Public Content Collections
+    // --------------------------------------------------------------------
+
+    /**
+     * @description Manages study materials uploaded by teachers. All signed-in users
+     *              can read materials. Only the original teacher can create, update, or delete.
+     * @path        /subjects/{subjectId}/study_materials/{studyMaterialId}
+     * @allow       A teacher (uid: 'teacher123') creates a new study material with `teacherId: 'teacher123'`. (create)
+     * @deny        A teacher tries to delete another teacher's study material. (delete)
+     * @principle   Enforces document ownership for writes on publicly readable content.
+     */
+    match /subjects/{subjectId}/study_materials/{studyMaterialId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.teacherId == request.auth.uid;
+      allow update: if resource != null && isOwner(resource.data.teacherId);
+      allow delete: if resource != null && isOwner(resource.data.teacherId);
+    }
+
+    /**
+     * @description Manages previous year question papers. All signed-in users can read them.
+     *              Only the original uploader (or an admin) can manage them.
+     * @path        /question_papers/{questionPaperId}
+     * @allow       A student downloads a question paper. (get)
+     * @deny        A user tries to create a paper and set the `uploaderId` to someone else. (create)
+     * @principle   Enforces document ownership for writes and validates relational integrity on create.
      */
     match /question_papers/{questionPaperId} {
-      allow get, list: if isSignedIn();
-      allow create: if (isTeacher() || isAdmin()) && isNewResourceOwner(request.resource.data);
-      allow update, delete: if (isTeacher() || isAdmin()) && isExistingDoc() && isExistingResourceOwner();
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.uploaderId == request.auth.uid;
+      allow update: if (resource != null && isOwner(resource.data.uploaderId)) || (isAdmin() && resource != null);
+      allow delete: if (resource != null && isOwner(resource.data.uploaderId)) || (isAdmin() && resource != null);
     }
 
     /**
-     * @description Notices published by teachers or admins. All authenticated users
-     *   can read them, but only the author can manage them.
-     * @path /notices/{noticeId}
-     * @allow (create) A teacher posts a new notice, setting `authorId` to their own UID.
-     * @deny (update) A student attempts to change the content of a notice.
-     * @deny (delete) A teacher attempts to delete a notice posted by an admin.
-     * @principle Enforces document ownership for writes for authorized roles (Admin, Teacher).
+     * @description Manages global and class-wise notices. Readable by all signed-in users
+     *              but can only be created or managed by Admins.
+     * @path        /notices/{noticeId}
+     * @allow       Any signed-in user reads a notice. (get)
+     * @deny        A teacher tries to post a new notice. (create)
+     * @principle   Restricts creation of authoritative content to Admins when no owner field exists.
      */
     match /notices/{noticeId} {
-      allow get, list: if isSignedIn();
-      allow create: if (isTeacher() || isAdmin()) && isNewResourceOwner(request.resource.data);
-      allow update, delete: if (isTeacher() || isAdmin()) && isExistingDoc() && isExistingResourceOwner();
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isAdmin();
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
     }
   }
 }
