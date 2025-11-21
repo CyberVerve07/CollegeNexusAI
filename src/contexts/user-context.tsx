@@ -18,9 +18,9 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 const roleMap: { [key: string]: UserRole } = {
-    'admin@collegenexus.edu': 'admin',
+    'student@collegenexus.edu': 'student',
     'teacher@collegenexus.edu': 'teacher',
-    'student@collegenexus.edu': 'student'
+    'admin@collegenexus.edu': 'admin'
 }
 
 export function UserProvider({ children }: { children: ReactNode }) {
