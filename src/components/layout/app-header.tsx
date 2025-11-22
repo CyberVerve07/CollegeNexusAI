@@ -102,7 +102,6 @@ export function AppHeader() {
                     width={36}
                     height={36}
                     alt={user.name}
-                    data-ai-hint={avatar.imageHint}
                     className="rounded-full"
                 />}
                  {!avatar && user && <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground">{user.name.charAt(0)}</div>}

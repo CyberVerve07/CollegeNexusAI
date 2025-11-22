@@ -5,7 +5,7 @@ import { FirebaseClientProvider } from "@/firebase";
 import { UserProvider } from "@/contexts/user-context";
 
 export const metadata: Metadata = {
-  title: "CollegeNexus AI",
+  title: "CollegeNexus",
   description: "A complete college management mobile application.",
   manifest: "/manifest.json",
 };

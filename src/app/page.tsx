@@ -110,7 +110,7 @@ export default function Home() {
       <div className="flex items-center gap-3 mb-8 text-primary">
         <Building2 className="h-12 w-12" />
         <h1 className="text-5xl font-bold font-headline text-foreground">
-          CollegeNexus AI
+          CollegeNexus
         </h1>
       </div>
       <p className="max-w-2xl mx-auto mb-10 text-lg text-muted-foreground">

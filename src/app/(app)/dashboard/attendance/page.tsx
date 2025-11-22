@@ -116,7 +116,7 @@ function TeacherAttendanceView() {
                   <TableRow key={student.id}>
                     <TableCell className="flex items-center gap-3">
                       <Avatar>
-                        {avatar && <AvatarImage src={avatar.imageUrl} alt={student.name} data-ai-hint={avatar.imageHint} />}
+                        {avatar && <AvatarImage src={avatar.imageUrl} alt={student.name} />}
                         <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
                       </Avatar>
                       <div>

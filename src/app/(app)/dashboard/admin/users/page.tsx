@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -93,7 +94,7 @@ export default function UsersPage() {
                                 <TableRow key={student.id}>
                                     <TableCell className="font-medium flex items-center gap-3">
                                         <Avatar>
-                                            {avatar && <AvatarImage src={avatar.imageUrl} data-ai-hint={avatar.imageHint} />}
+                                            {avatar && <AvatarImage src={avatar.imageUrl} />}
                                             <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
                                         </Avatar>
                                         <div>
@@ -135,7 +136,7 @@ export default function UsersPage() {
                                 <TableRow key={teacher.id}>
                                     <TableCell className="font-medium flex items-center gap-3">
                                         <Avatar>
-                                            {avatar && <AvatarImage src={avatar.imageUrl} data-ai-hint={avatar.imageHint} />}
+                                            {avatar && <AvatarImage src={avatar.imageUrl} />}
                                             <AvatarFallback>{teacher.name.charAt(0)}</AvatarFallback>
                                         </Avatar>
                                         <div>
