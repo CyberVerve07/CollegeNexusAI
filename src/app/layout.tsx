@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { FirebaseClientProvider } from "@/firebase";
+import { UserProvider } from "@/contexts/user-context";
 
 export const metadata: Metadata = {
   title: "CollegeNexus AI",
@@ -27,7 +28,9 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
-          {children}
+          <UserProvider>
+            {children}
+          </UserProvider>
         </FirebaseClientProvider>
       </body>
     </html>
