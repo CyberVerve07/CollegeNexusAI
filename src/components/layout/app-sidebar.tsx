@@ -15,6 +15,7 @@ import {
   GraduationCap,
   BadgeCheck,
   Building2,
+  Share2,
 } from "lucide-react";
 import {
   Sidebar,
@@ -51,6 +52,7 @@ const adminNav = [
   { href: "/dashboard/admin/academics", icon: GraduationCap, label: "Manage Academics" },
   { href: "/dashboard/papers", icon: BadgeCheck, label: "Verify Papers" },
   { href: "/dashboard/notices", icon: Megaphone, label: "Global Notices" },
+  { href: "/dashboard/backend-explanation", icon: Share2, label: "Backend Explained" },
 ];
 
 const navItemsMap = {
