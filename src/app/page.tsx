@@ -3,7 +3,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useUser, useAuth } from "@/firebase";
+import { useAuth } from "@/firebase";
+import { useUser } from "@/contexts/user-context";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import {
   Card,
@@ -163,9 +164,6 @@ export default function Home() {
                 required
                 disabled={isLoading}
               />
-               <p className="text-xs text-muted-foreground px-1">
-                Hint: Use `admin123`, `teacher123`, or `student123`.
-              </p>
             </div>
           </CardContent>
           <CardFooter>

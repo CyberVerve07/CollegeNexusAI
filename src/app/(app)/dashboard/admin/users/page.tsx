@@ -94,7 +94,7 @@ export default function UsersPage() {
                                 <TableRow key={student.id}>
                                     <TableCell className="font-medium flex items-center gap-3">
                                         <Avatar>
-                                            {avatar && <AvatarImage src={avatar.imageUrl} />}
+                                            {avatar && <AvatarImage src={avatar.imageUrl} alt={student.name} />}
                                             <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
                                         </Avatar>
                                         <div>
@@ -136,7 +136,7 @@ export default function UsersPage() {
                                 <TableRow key={teacher.id}>
                                     <TableCell className="font-medium flex items-center gap-3">
                                         <Avatar>
-                                            {avatar && <AvatarImage src={avatar.imageUrl} />}
+                                            {avatar && <AvatarImage src={avatar.imageUrl} alt={teacher.name} />}
                                             <AvatarFallback>{teacher.name.charAt(0)}</AvatarFallback>
                                         </Avatar>
                                         <div>
